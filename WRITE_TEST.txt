@@ -1,0 +1,2 @@
+Schreibtest von ChatGPT.
+Wenn diese Datei existiert, funktionieren die GitHub-Schreibrechte.
