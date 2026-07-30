@@ -60,7 +60,7 @@ def _cut_facade(doc, facade_name, specs, *, y, depth):
     facade.Shape = result
 
 
-def _frame(doc, group, spec, *, y, depth, outward):
+def _frame(doc, group, spec, *, y, outward):
     frame = 45.0
     trim_depth = 35.0
     wood = (0.76, 0.55, 0.31)
@@ -113,6 +113,9 @@ def _frame(doc, group, spec, *, y, depth, outward):
 
 def create_supplementary_openings(doc, *, building_width, cladding_thickness):
     """Schneidet und bestückt alle bislang fehlenden Fassadenöffnungen."""
+    if doc.getObject("SupplementaryOpenings") is not None:
+        return doc.getObject("SupplementaryOpenings")
+
     group = doc.addObject("App::DocumentObjectGroup", "SupplementaryOpenings")
     group.Label = "Ergänzte Fenster, Türen und Tierklappen"
 
@@ -132,9 +135,33 @@ def create_supplementary_openings(doc, *, building_width, cladding_thickness):
     _cut_facade(doc, "NorthCladding", north_specs, y=north_y, depth=cladding_thickness)
 
     for spec in south_specs:
-        _frame(doc, group, spec, y=south_y, depth=cladding_thickness, outward=-1.0)
+        _frame(doc, group, spec, y=south_y, outward=-1.0)
     for spec in north_specs:
-        _frame(doc, group, spec, y=north_y, depth=cladding_thickness, outward=1.0)
+        _frame(doc, group, spec, y=north_y, outward=1.0)
 
     doc.recompute()
     return group
+
+
+def install_envelope_hook():
+    """Hängt die Zusatzöffnungen transparent an create_building_envelope an."""
+    from modules import envelope
+
+    original = envelope.create_building_envelope
+    if getattr(original, "_supplementary_openings_hook", False):
+        return
+
+    def wrapped(doc, **kwargs):
+        group = original(doc, **kwargs)
+        create_supplementary_openings(
+            doc,
+            building_width=kwargs["width"],
+            cladding_thickness=kwargs["cladding_thickness"],
+        )
+        return group
+
+    wrapped._supplementary_openings_hook = True
+    envelope.create_building_envelope = wrapped
+
+
+install_envelope_hook()
