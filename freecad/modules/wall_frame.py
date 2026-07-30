@@ -32,7 +32,8 @@ def _beam(document, name, label, x, y, z, dx, dy, dz):
     obj.Shape = Part.makeBox(dx, dy, dz, App.Vector(x, y, z))
     obj.addProperty("App::PropertyString", "Material", "Bauteil")
     obj.Material = "KVH C24"
-    obj.ViewObject.ShapeColor = (0.76, 0.56, 0.32)
+    if obj.ViewObject is not None:
+        obj.ViewObject.ShapeColor = (0.76, 0.56, 0.32)
     return obj
 
 
