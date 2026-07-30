@@ -64,3 +64,7 @@ NEST_FLOOR_HEIGHT = 500.0
 
 OUTPUT_DIRECTORY = "output"
 OUTPUT_FILENAME = f"{PROJECT_NAME}.FCStd"
+
+# Aktiviert die zusätzlichen Fassadenöffnungen, bevor build.py
+# create_building_envelope aus modules.envelope importiert.
+from modules import supplementary_openings as _supplementary_openings  # noqa: E402,F401
