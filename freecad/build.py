@@ -33,10 +33,12 @@ from config.parameters import (  # noqa: E402
     ANIMAL_FLAP_X,
     BUILDING_LENGTH,
     BUILDING_WIDTH,
+    CLADDING_THICKNESS,
     DOOR_HEIGHT,
     DOOR_LEAF_THICKNESS,
     DOOR_WIDTH,
     DOOR_X,
+    FLOOR_THICKNESS,
     NEST_BOX_DEPTH,
     NEST_BOX_HEIGHT,
     NEST_BOX_WIDTH,
@@ -76,6 +78,7 @@ from config.parameters import (  # noqa: E402
     WINDOW_WIDTH,
     WINDOW_X,
 )
+from modules.envelope import create_building_envelope  # noqa: E402
 from modules.foundation import create_foundation  # noqa: E402
 from modules.interior import create_interior  # noqa: E402
 from modules.openings import create_south_opening_elements  # noqa: E402
@@ -87,6 +90,20 @@ def ensure_output_directory() -> Path:
     output = PROJECT_DIR / OUTPUT_DIRECTORY
     output.mkdir(parents=True, exist_ok=True)
     return output
+
+
+def configure_saved_view(doc: App.Document) -> None:
+    """Speichert bei GUI-Ausführung eine brauchbare axonometrische Gesamtansicht."""
+    if not getattr(App, "GuiUp", False):
+        return
+    try:
+        import FreeCADGui as Gui
+
+        Gui.activeDocument().activeView().viewAxonometric()
+        Gui.activeDocument().activeView().fitAll()
+        doc.recompute()
+    except Exception as exc:  # Ansicht darf den headless Build nicht abbrechen.
+        print(f"Hinweis: Startansicht konnte nicht gesetzt werden: {exc}")
 
 
 def build() -> App.Document:
@@ -183,6 +200,27 @@ def build() -> App.Document:
         direction="y",
     )
 
+    create_building_envelope(
+        doc,
+        length=BUILDING_LENGTH,
+        width=BUILDING_WIDTH,
+        wall_height=WALL_HEIGHT,
+        pitch_deg=ROOF_PITCH_DEG,
+        stud_depth=STUD_DEPTH,
+        cladding_thickness=CLADDING_THICKNESS,
+        floor_thickness=FLOOR_THICKNESS,
+        door_x=DOOR_X,
+        door_width=DOOR_WIDTH,
+        door_height=DOOR_HEIGHT,
+        window_x=WINDOW_X,
+        window_width=WINDOW_WIDTH,
+        window_height=WINDOW_HEIGHT,
+        window_sill_height=WINDOW_SILL_HEIGHT,
+        flap_x=ANIMAL_FLAP_X,
+        flap_width=ANIMAL_FLAP_WIDTH,
+        flap_height=ANIMAL_FLAP_HEIGHT,
+    )
+
     create_south_opening_elements(
         doc,
         wall_y=0.0,
@@ -240,6 +278,7 @@ def build() -> App.Document:
     )
 
     doc.recompute()
+    configure_saved_view(doc)
     target = ensure_output_directory() / OUTPUT_FILENAME
     doc.saveAs(os.fspath(target))
     print(f"FreeCAD-Modell gespeichert: {target}")
