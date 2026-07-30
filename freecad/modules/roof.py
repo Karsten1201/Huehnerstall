@@ -8,7 +8,7 @@ import Part
 
 
 def create_gable_roof(document, *, length, width, wall_height, pitch_deg,
-                       eave_overhang, gable_overhang, rafter_depth):
+                      eave_overhang, gable_overhang, rafter_depth):
     """Erzeugt zwei vereinfachte Dachflächen als Volumenkörper."""
     if min(length, width, wall_height, pitch_deg, rafter_depth) <= 0:
         raise ValueError("Dachparameter müssen größer als null sein.")
@@ -31,6 +31,7 @@ def create_gable_roof(document, *, length, width, wall_height, pitch_deg,
         panel.addProperty("App::PropertyLength", "RidgeHeight", "Dach")
         panel.Pitch = pitch_deg
         panel.RidgeHeight = wall_height + rise
-        panel.ViewObject.ShapeColor = (0.28, 0.30, 0.32)
+        if panel.ViewObject is not None:
+            panel.ViewObject.ShapeColor = (0.28, 0.30, 0.32)
         group.addObject(panel)
     return group
