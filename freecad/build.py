@@ -36,9 +36,20 @@ from config.parameters import (  # noqa: E402
     DOOR_HEIGHT,
     DOOR_WIDTH,
     DOOR_X,
+    NEST_BOX_DEPTH,
+    NEST_BOX_HEIGHT,
+    NEST_BOX_WIDTH,
+    NEST_COUNT,
+    NEST_FLOOR_HEIGHT,
+    NEST_WALL_THICKNESS,
     OUTPUT_DIRECTORY,
     OUTPUT_FILENAME,
     PARTITION_X,
+    PERCH_COUNT,
+    PERCH_DIAMETER,
+    PERCH_FIRST_HEIGHT,
+    PERCH_LENGTH,
+    PERCH_SPACING,
     PROJECT_NAME,
     RAFTER_DEPTH,
     RAFTER_SPACING,
@@ -61,6 +72,7 @@ from config.parameters import (  # noqa: E402
     WINDOW_X,
 )
 from modules.foundation import create_foundation  # noqa: E402
+from modules.interior import create_interior  # noqa: E402
 from modules.roof import create_gable_roof  # noqa: E402
 from modules.wall_frame import Opening, create_wall_frame  # noqa: E402
 
@@ -163,6 +175,24 @@ def build() -> App.Document:
         stud_depth=STUD_DEPTH,
         spacing=STUD_SPACING,
         direction="y",
+    )
+
+    create_interior(
+        doc,
+        partition_x=PARTITION_X,
+        building_length=BUILDING_LENGTH,
+        stud_depth=STUD_DEPTH,
+        perch_count=PERCH_COUNT,
+        perch_length=PERCH_LENGTH,
+        perch_diameter=PERCH_DIAMETER,
+        perch_spacing=PERCH_SPACING,
+        perch_height=PERCH_FIRST_HEIGHT,
+        nest_count=NEST_COUNT,
+        nest_width=NEST_BOX_WIDTH,
+        nest_depth=NEST_BOX_DEPTH,
+        nest_height=NEST_BOX_HEIGHT,
+        nest_wall=NEST_WALL_THICKNESS,
+        nest_floor_height=NEST_FLOOR_HEIGHT,
     )
 
     create_gable_roof(
