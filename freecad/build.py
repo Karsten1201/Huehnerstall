@@ -11,10 +11,22 @@ try:
     import FreeCAD as App
 except ModuleNotFoundError as exc:
     raise SystemExit(
-        "FreeCAD-Pythonmodul nicht gefunden. Starte mit: FreeCADCmd freecad/build.py"
+        "FreeCAD-Pythonmodul nicht gefunden. Starte über FreeCADCmd oder das AppImage."
     ) from exc
 
-PROJECT_DIR = Path(__file__).resolve().parent
+# Bei normalem Skriptstart ist __file__ gesetzt. Beim Aufruf über die
+# interaktive AppImage-Konsole mit exec() fehlt es; dann liegt das Projekt
+# relativ zum aktuellen Arbeitsverzeichnis unter ./freecad.
+PROJECT_DIR = (
+    Path(__file__).resolve().parent
+    if "__file__" in globals()
+    else (Path.cwd() / "freecad").resolve()
+)
+if not (PROJECT_DIR / "config" / "parameters.py").is_file():
+    raise SystemExit(
+        f"FreeCAD-Projektverzeichnis nicht gefunden: {PROJECT_DIR}\n"
+        "Starte den Befehl im Stammverzeichnis des geklonten Repositories."
+    )
 if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
 
