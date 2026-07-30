@@ -1,0 +1,1 @@
+"""Bauteilmodule des Hühnerstall-Projekts."""
