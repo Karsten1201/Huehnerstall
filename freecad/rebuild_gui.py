@@ -12,13 +12,7 @@ import FreeCADGui as Gui
 
 
 def _find_project_dir() -> Path:
-    """Findet den Ordner ``freecad`` auch bei Ausführung aus der Python-Konsole.
-
-    In der eingebauten FreeCAD-Python-Konsole ist ``__file__`` bei einem mit
-    ``exec(compile(...))`` gestarteten Skript nicht zuverlässig gesetzt. Daher
-    werden zusätzlich das Arbeitsverzeichnis, dessen Eltern und typische
-    Repository-Pfade unterhalb des Benutzerverzeichnisses geprüft.
-    """
+    """Findet den Ordner ``freecad`` auch bei Ausführung aus der Python-Konsole."""
     candidates: list[Path] = []
 
     if "__file__" in globals():
@@ -77,12 +71,32 @@ from config.parameters import OUTPUT_DIRECTORY, OUTPUT_FILENAME  # noqa: E402
 
 
 def _gui_document(doc: App.Document):
-    """Aktiviert genau das soeben erzeugte Dokument und liefert sein GUI-Dokument."""
-    Gui.activateDocument(doc.Name)
+    """Aktiviert das erzeugte Dokument kompatibel mit FreeCAD 0.20 bis 1.1."""
+    # FreeCAD 1.1 stellt FreeCADGui.activateDocument() nicht bereit. Die
+    # Dokumentaktivierung erfolgt deshalb über den App-Layer. getDocument()
+    # liefert anschließend das zugehörige GUI-Dokument.
+    try:
+        App.setActiveDocument(doc.Name)
+    except Exception:
+        pass
+
     Gui.updateGui()
-    gui_doc = Gui.getDocument(doc.Name)
+
+    gui_doc = None
+    try:
+        gui_doc = Gui.getDocument(doc.Name)
+    except Exception:
+        gui_doc = None
+
+    if gui_doc is None:
+        try:
+            gui_doc = Gui.activeDocument()
+        except Exception:
+            gui_doc = None
+
     if gui_doc is None:
         raise RuntimeError(f"Kein GUI-Dokument für {doc.Name} verfügbar.")
+
     return gui_doc
 
 
@@ -90,7 +104,11 @@ def _show_complete_model(doc: App.Document) -> tuple[int, int]:
     """Macht alle Bauteile sichtbar und gibt (sichtbare Shapes, leere Shapes) zurück."""
     gui_doc = _gui_document(doc)
     active_view = gui_doc.activeView()
-    active_view.setAnimationEnabled(False)
+
+    try:
+        active_view.setAnimationEnabled(False)
+    except Exception:
+        pass
 
     visible_shapes = 0
     empty_shapes = 0
@@ -134,7 +152,10 @@ def _show_complete_model(doc: App.Document) -> tuple[int, int]:
     doc.recompute()
     Gui.updateGui()
 
-    active_view.setCameraType("Perspective")
+    try:
+        active_view.setCameraType("Perspective")
+    except Exception:
+        pass
     active_view.viewAxonometric()
     active_view.fitAll(0.85)
     active_view.redraw()
@@ -160,9 +181,10 @@ def main() -> None:
     doc.saveAs(os.fspath(target))
 
     gui_doc = _gui_document(doc)
-    gui_doc.activeView().viewAxonometric()
-    gui_doc.activeView().fitAll(0.85)
-    gui_doc.activeView().redraw()
+    active_view = gui_doc.activeView()
+    active_view.viewAxonometric()
+    active_view.fitAll(0.85)
+    active_view.redraw()
     Gui.updateGui()
 
     print(
