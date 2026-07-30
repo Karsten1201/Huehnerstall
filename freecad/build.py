@@ -34,6 +34,7 @@ from config.parameters import (  # noqa: E402
     BUILDING_LENGTH,
     BUILDING_WIDTH,
     DOOR_HEIGHT,
+    DOOR_LEAF_THICKNESS,
     DOOR_WIDTH,
     DOOR_X,
     NEST_BOX_DEPTH,
@@ -42,6 +43,9 @@ from config.parameters import (  # noqa: E402
     NEST_COUNT,
     NEST_FLOOR_HEIGHT,
     NEST_WALL_THICKNESS,
+    OPENING_CLEARANCE,
+    OPENING_FRAME_DEPTH,
+    OPENING_FRAME_WIDTH,
     OUTPUT_DIRECTORY,
     OUTPUT_FILENAME,
     PARTITION_X,
@@ -66,6 +70,7 @@ from config.parameters import (  # noqa: E402
     STUD_SPACING,
     STUD_WIDTH,
     WALL_HEIGHT,
+    WINDOW_GLASS_THICKNESS,
     WINDOW_HEIGHT,
     WINDOW_SILL_HEIGHT,
     WINDOW_WIDTH,
@@ -73,6 +78,7 @@ from config.parameters import (  # noqa: E402
 )
 from modules.foundation import create_foundation  # noqa: E402
 from modules.interior import create_interior  # noqa: E402
+from modules.openings import create_south_opening_elements  # noqa: E402
 from modules.roof import create_gable_roof  # noqa: E402
 from modules.wall_frame import Opening, create_wall_frame  # noqa: E402
 
@@ -175,6 +181,28 @@ def build() -> App.Document:
         stud_depth=STUD_DEPTH,
         spacing=STUD_SPACING,
         direction="y",
+    )
+
+    create_south_opening_elements(
+        doc,
+        wall_y=0.0,
+        wall_bottom=STUD_WIDTH,
+        wall_depth=STUD_DEPTH,
+        door_x=DOOR_X,
+        door_width=DOOR_WIDTH,
+        door_height=DOOR_HEIGHT,
+        window_x=WINDOW_X,
+        window_width=WINDOW_WIDTH,
+        window_height=WINDOW_HEIGHT,
+        window_sill_height=WINDOW_SILL_HEIGHT,
+        flap_x=ANIMAL_FLAP_X,
+        flap_width=ANIMAL_FLAP_WIDTH,
+        flap_height=ANIMAL_FLAP_HEIGHT,
+        frame_width=OPENING_FRAME_WIDTH,
+        frame_depth=OPENING_FRAME_DEPTH,
+        leaf_thickness=DOOR_LEAF_THICKNESS,
+        glass_thickness=WINDOW_GLASS_THICKNESS,
+        clearance=OPENING_CLEARANCE,
     )
 
     create_interior(
