@@ -1,0 +1,1 @@
+"""Konfiguration des Hühnerstall-Projekts."""
