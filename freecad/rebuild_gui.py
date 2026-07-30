@@ -10,16 +10,65 @@ from pathlib import Path
 import FreeCAD as App
 import FreeCADGui as Gui
 
-PROJECT_DIR = (
-    Path(__file__).resolve().parent
-    if "__file__" in globals()
-    else (Path.cwd() / "freecad").resolve()
-)
-if not (PROJECT_DIR / "build.py").is_file():
-    raise RuntimeError(
-        f"FreeCAD-Projektverzeichnis nicht gefunden: {PROJECT_DIR}\n"
-        "Starte das Makro aus dem Repository oder setze den vollständigen Pfad."
+
+def _find_project_dir() -> Path:
+    """Findet den Ordner ``freecad`` auch bei Ausführung aus der Python-Konsole.
+
+    In der eingebauten FreeCAD-Python-Konsole ist ``__file__`` bei einem mit
+    ``exec(compile(...))`` gestarteten Skript nicht zuverlässig gesetzt. Daher
+    werden zusätzlich das Arbeitsverzeichnis, dessen Eltern und typische
+    Repository-Pfade unterhalb des Benutzerverzeichnisses geprüft.
+    """
+    candidates: list[Path] = []
+
+    if "__file__" in globals():
+        try:
+            candidates.append(Path(__file__).expanduser().resolve().parent)
+        except (OSError, RuntimeError):
+            pass
+
+    cwd = Path.cwd().expanduser().resolve()
+    candidates.extend((cwd, cwd / "freecad"))
+    for parent in cwd.parents:
+        candidates.extend((parent, parent / "freecad"))
+
+    home = Path.home()
+    candidates.extend(
+        (
+            home / "Dokumente" / "Hühnerstall" / "Huehnerstall" / "freecad",
+            home / "Dokumente" / "Huehnerstall" / "freecad",
+            home / "Dokumente" / "huehnerstall-freecad" / "freecad",
+            home / "Dokumente" / "huehnerstall-freecad",
+        )
     )
+
+    env_dir = os.environ.get("HUEHNERSTALL_FREECAD_DIR")
+    if env_dir:
+        candidates.insert(0, Path(env_dir).expanduser())
+
+    checked: set[Path] = set()
+    for candidate in candidates:
+        try:
+            candidate = candidate.resolve()
+        except (OSError, RuntimeError):
+            continue
+        if candidate in checked:
+            continue
+        checked.add(candidate)
+        if (candidate / "build.py").is_file() and (
+            candidate / "config" / "parameters.py"
+        ).is_file():
+            return candidate
+
+    checked_text = "\n".join(f"  - {path}" for path in sorted(checked, key=str))
+    raise RuntimeError(
+        "FreeCAD-Projektverzeichnis nicht gefunden. Geprüfte Pfade:\n"
+        f"{checked_text}\n"
+        "Optional HUEHNERSTALL_FREECAD_DIR auf den vollständigen freecad-Ordner setzen."
+    )
+
+
+PROJECT_DIR = _find_project_dir()
 if str(PROJECT_DIR) not in sys.path:
     sys.path.insert(0, str(PROJECT_DIR))
 
@@ -46,7 +95,6 @@ def _show_complete_model(doc: App.Document) -> tuple[int, int]:
     visible_shapes = 0
     empty_shapes = 0
 
-    # Zuerst Baugruppen sichtbar schalten, danach die eigentlichen Shape-Objekte.
     for obj in doc.Objects:
         view = getattr(obj, "ViewObject", None)
         if view is None:
@@ -95,6 +143,7 @@ def _show_complete_model(doc: App.Document) -> tuple[int, int]:
 
 
 def main() -> None:
+    print(f"Verwendetes FreeCAD-Projektverzeichnis: {PROJECT_DIR}")
     doc = build()
     visible_shapes, empty_shapes = _show_complete_model(doc)
 
@@ -110,8 +159,6 @@ def main() -> None:
     Gui.updateGui()
     doc.saveAs(os.fspath(target))
 
-    # Nach dem Speichern nochmals aktivieren und einpassen, damit auch die aktuelle
-    # Sitzung sofort das Modell zeigt.
     gui_doc = _gui_document(doc)
     gui_doc.activeView().viewAxonometric()
     gui_doc.activeView().fitAll(0.85)
