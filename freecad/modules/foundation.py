@@ -45,5 +45,6 @@ def create_foundation(
         thickness,
         App.Vector(-overhang, -overhang, -thickness),
     )
-    slab.ViewObject.ShapeColor = (0.72, 0.72, 0.72)
+    if slab.ViewObject is not None:
+        slab.ViewObject.ShapeColor = (0.72, 0.72, 0.72)
     return slab
