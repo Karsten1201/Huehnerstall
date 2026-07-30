@@ -14,9 +14,6 @@ except ModuleNotFoundError as exc:
         "FreeCAD-Pythonmodul nicht gefunden. Starte über FreeCADCmd oder das AppImage."
     ) from exc
 
-# Bei normalem Skriptstart ist __file__ gesetzt. Beim Aufruf über die
-# interaktive AppImage-Konsole mit exec() fehlt es; dann liegt das Projekt
-# relativ zum aktuellen Arbeitsverzeichnis unter ./freecad.
 PROJECT_DIR = (
     Path(__file__).resolve().parent
     if "__file__" in globals()
@@ -44,6 +41,11 @@ from config.parameters import (  # noqa: E402
     PARTITION_X,
     PROJECT_NAME,
     RAFTER_DEPTH,
+    RAFTER_SPACING,
+    RAFTER_WIDTH,
+    RIDGE_BEAM_DEPTH,
+    RIDGE_BEAM_WIDTH,
+    ROOF_COVER_THICKNESS,
     ROOF_OVERHANG_EAVE,
     ROOF_OVERHANG_GABLE,
     ROOF_PITCH_DEG,
@@ -70,8 +72,6 @@ def ensure_output_directory() -> Path:
 
 
 def build() -> App.Document:
-    # App.getDocument() wirft bei einem unbekannten Namen eine NameError-
-    # Ausnahme. listDocuments() erlaubt dagegen eine sichere Existenzprüfung.
     if PROJECT_NAME in App.listDocuments():
         App.closeDocument(PROJECT_NAME)
     doc = App.newDocument(PROJECT_NAME)
@@ -173,7 +173,12 @@ def build() -> App.Document:
         pitch_deg=ROOF_PITCH_DEG,
         eave_overhang=ROOF_OVERHANG_EAVE,
         gable_overhang=ROOF_OVERHANG_GABLE,
+        rafter_width=RAFTER_WIDTH,
         rafter_depth=RAFTER_DEPTH,
+        rafter_spacing=RAFTER_SPACING,
+        ridge_width=RIDGE_BEAM_WIDTH,
+        ridge_depth=RIDGE_BEAM_DEPTH,
+        cover_thickness=ROOF_COVER_THICKNESS,
     )
 
     doc.recompute()
