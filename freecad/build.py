@@ -70,8 +70,9 @@ def ensure_output_directory() -> Path:
 
 
 def build() -> App.Document:
-    old = App.getDocument(PROJECT_NAME)
-    if old is not None:
+    # App.getDocument() wirft bei einem unbekannten Namen eine NameError-
+    # Ausnahme. listDocuments() erlaubt dagegen eine sichere Existenzprüfung.
+    if PROJECT_NAME in App.listDocuments():
         App.closeDocument(PROJECT_NAME)
     doc = App.newDocument(PROJECT_NAME)
 
